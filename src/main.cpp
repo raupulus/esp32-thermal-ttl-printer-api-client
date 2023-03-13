@@ -1,55 +1,71 @@
 #include <Arduino.h>
-#include <wchar.h>
-#include <locale.h>
 
 // Librería de impresión - https://learn.adafruit.com/mini-thermal-receipt-printer
 #include "Adafruit_Thermal.h"
 
-// Pines para definir comunicación Serial
+// Defino comunicación Serial
 #define TX_PIN 3
 #define RX_PIN 1
+#define BAUDRATE 9600
 
+// Defino parámetros de impresora térmica
 Adafruit_Thermal printer(&Serial);
+#define DEFAULT_CHARSET CHARSET_SPAIN2
+#define DEFAULT_CODEPAGE CODEPAGE_ISO_8859_15
 
-// Tipos de Barcode - http://www.barcodeisland.com/symbolgy.phtml
-/*
-12 Dígitos → UPC_A
-6 Dígitos → UPC_E
-13 Dígitos → EAN13
-8 Dígitos → EAN8
-Variable 0-9,A-Z,space,$%+-./ → CODE39
-2-254 variable múltiple de 2 Dígitos → ITF
-Variable 0-9,A-D,%+-./ → CODABAR
-2-255 characters (ASCII 0-127) → CODE128
+// Wireless
 
-Ejemplo:
-printer.print(F("CODE128:"));
-printer.printBarcode("Adafruit", CODE128);
-*/
+//TODO
 
 void setup()
 {
-
-  // Establezco locale
-  //setlocale(LC_ALL, "");
-  setlocale(LC_CTYPE, "Spanish");
+  int CHARSET = DEFAULT_CHARSET;
+  int CODEPAGE = DEFAULT_CODEPAGE;
 
   //pinMode(7, OUTPUT);
   //digitalWrite(7, LOW);
 
-  Serial.begin(9600, SERIAL_8N1, RX_PIN, TX_PIN);
+  Serial.begin(BAUDRATE, SERIAL_8N1, RX_PIN, TX_PIN);
+  sleep(1);
   printer.begin();
+  sleep(1);
 
+  // Establezco locale
+  printer.setCharset(CHARSET);
+  printer.setCodePage(CODEPAGE);
+  sleep(1);
+
+  //printer.print(F("avión en € y @"));
+  String text = "avión en € y @";
+
+  int lineSize = text.length();
+
+  uint8_t data[lineSize];
+
+  for (int i = 0; i < lineSize; i++)
+  {
+    data[i] = text.charAt(i);
+
+    printer.write(data[i]);
+  }
+
+  //printBitmap(*bitmap, width, height, scale = 1, center = true)
+  /*
+  printer.println("Iniciando");
   printer.justify('C');
   printer.boldOn();
   printer.println("Impresión de prueba");
   printer.boldOff();
   printer.justify('L');
 
-  printer.print(F("Texto a la izquierda:"));
+  printer.println("Texto a la izquierda");
+  */
 
-  printer.feed(2);
+  //printer.write();
+
+  printer.feed(3);
   printer.setDefault(); // Restore printer to defaults
+  printer.wake();       // Pone en modo bajo consumo la impresora
 }
 
 void loop()
